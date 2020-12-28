@@ -130,15 +130,14 @@ class PvGenerator:
         self.zenith_time = sunrise + self.day_len / 2
 
         dawn_len = self.day_len / 10
-        self.dawn_start = self.sunrise + -dawn_len
+        self.dawn_start = self.sunrise - dawn_len
         self.dusk_end = self.sunset + dawn_len
 
         self.poly_factor = -max_power / (self.day_len / 2) ** 2
         self.dawn_slope = max_power / (self.day_len / 2 + dawn_len) / 3
 
     def get_value(self, time: TimeOfDay) -> int:
-        x = time.seconds()
-        if x < self.dawn_start.seconds() or x > self.dusk_end.seconds():
+        if time < self.dawn_start or time > self.dusk_end:
             return 0
         else:
             t1 = self.get_polynomial_value(time)
@@ -147,10 +146,10 @@ class PvGenerator:
 
     def get_dawn_or_dusk_value(self, time: TimeOfDay) -> int:
         x = time.seconds()
-        if x < self.zenith_time.seconds():
+        if time < self.zenith_time:
             return (x - self.dawn_start.seconds()) * self.dawn_slope
         else:
-            return (x - self.dusk_end.seconds()) * (-self.dawn_slope)
+            return -(x - self.dusk_end.seconds()) * self.dawn_slope
 
     def get_polynomial_value(self, time: TimeOfDay) -> int:
         x = time.seconds()

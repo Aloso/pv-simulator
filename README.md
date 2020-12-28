@@ -1,6 +1,6 @@
 # pv-simulator
 
-[![GitHub](https://img.shields.io/github/license/Aloso/pv-simulaton)](LICENSE)
+[![GitHub](https://img.shields.io/github/license/Aloso/pv-simulator?style=flat-square)](LICENSE)
 
 Solves the PV Simulator Challenge
 
@@ -36,8 +36,10 @@ The second service can be started by running `./simulator.py`; it must be termin
 
 ### Randomness
 
-Both services use a seed to generate randomness. This means that the results are perfectly reproducible by using the same seed.
+Both services use a seed to generate randomness. This means that the results are perfectly reproducible by using the same seed, which is useful for integration tests.
 
 ## Example output
+
+In the following diagram, the pv power output is red and the meter values are purple.
 
 ![Graph](docs/graph.png)

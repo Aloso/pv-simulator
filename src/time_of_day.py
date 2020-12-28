@@ -82,3 +82,13 @@ class TimeOfDay:
     def __add__(self, seconds: int):
         time = rem_euclid(self.time + seconds, SECS_PER_DAY)
         return TimeOfDay(time)
+
+    def __sub__(self, seconds: int):
+        time = rem_euclid(self.time - seconds, SECS_PER_DAY)
+        return TimeOfDay(time)
+
+    def __lt__(self, rhs) -> bool:
+        return self.seconds() < rhs.seconds()
+
+    def __gt__(self, rhs) -> bool:
+        return self.seconds() > rhs.seconds()
