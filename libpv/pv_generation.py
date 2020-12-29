@@ -1,5 +1,6 @@
-from time_of_day import TimeOfDay
-from prng import continuous_prng
+from libpv.time_of_day import TimeOfDay
+from libpv.prng import continuous_prng
+
 from random import Random
 
 

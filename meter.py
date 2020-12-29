@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-from src.time_of_day import TimeOfDay, SECS_PER_DAY
-from src.prng import continuous_prng
+from libpv.time_of_day import TimeOfDay, SECS_PER_DAY
+from libpv.prng import continuous_prng
 
 import argparse
 import pika

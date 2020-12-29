@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-from prng import continuous_prng
+import sys, os, random, unittest, itertools
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# pylint: disable=import-error
 
-import itertools
-import random
-import unittest
+from libpv.prng import continuous_prng
 
 
 class TestContinuousPrng(unittest.TestCase):

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-from src.time_of_day import TimeOfDay
-from src.pv_generation import PvGenerator, weather
+from libpv.time_of_day import TimeOfDay
+from libpv.pv_generation import PvGenerator, weather
 
 import argparse
 import os

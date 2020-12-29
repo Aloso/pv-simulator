@@ -37,7 +37,7 @@ class TimeOfDay:
         h = rem_euclid(h, 24)
         m = rem_euclid(m, 60)
         s = rem_euclid(s, 60)
-        return TimeOfDay(h * 3600 + m * 60 * s)
+        return TimeOfDay(h * 3600 + m * 60 + s)
 
     @staticmethod
     def parse_hms(input: str):
@@ -79,6 +79,9 @@ class TimeOfDay:
 
         return f'{h}:{m}:{s}'
 
+    def __repr__(self):
+        return f'TimeOfDay({self.time})'
+
     def __add__(self, seconds: int):
         time = rem_euclid(self.time + seconds, SECS_PER_DAY)
         return TimeOfDay(time)
@@ -88,7 +91,10 @@ class TimeOfDay:
         return TimeOfDay(time)
 
     def __lt__(self, rhs) -> bool:
-        return self.seconds() < rhs.seconds()
+        return self.time < rhs.time
 
     def __gt__(self, rhs) -> bool:
-        return self.seconds() > rhs.seconds()
+        return self.time > rhs.time
+
+    def __eq__(self, rhs) -> bool:
+        return self.time == rhs.time
