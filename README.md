@@ -34,12 +34,28 @@ The first service can be started by running `./meter.py`; it terminates automati
 
 The second service can be started by running `./simulator.py`; it must be terminated by pressing <kbd>Ctrl+C</kbd>. By default, this generates photovolataic power values up to 3.5 kW, with some added noise to account for clouds and bad weather, and writes them to the file `pv_values.txt`. Run `./simulator.py --help` to see all available options.
 
+## Test suite
+
+This project includes a unit test suite. To run the tests, execute
+
+```shell
+python -m unittest tests/*.py
+```
+
+You can also run individual test files, e.g. by executing
+
+```shell
+python -m unittest tests/time_of_day.py
+```
+
+Run `python -m unittest --help` to see all available options.
+
 ### Randomness
 
-Both services use a seed to generate randomness. This means that the results are perfectly reproducible by using the same seed, which is useful for integration tests.
+All functions that use randomness accept a seed. This means that the results are perfectly reproducible when the same seed is used, which is helpful for integration tests.
 
 ## Example output
 
-In the following diagram, the pv power output is red and the meter values are purple.
+In the following diagrams, the pv power output is blue and the meter values are red:
 
-![Graph](docs/graph.png)
+![Graphs](docs/graphs.png)
