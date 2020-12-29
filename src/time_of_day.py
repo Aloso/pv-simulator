@@ -45,11 +45,11 @@ class TimeOfDay:
         Examples: `TimeOfDay.parse('03:50 pm')`, `TimeOfDay.parse('15:50:00')`"""
 
         if input.endswith('am') or input.endswith('pm'):
-            [h, m, s, *_] = input[:-2].split(':') + ['0', '0']
+            [h, m, s, *_] = input[:-2].strip().split(':') + ['0', '0']
 
-            h = int(h.strip()) if input.endswith('am') else int(h.strip()) + 12
-            m = int(m.strip())
-            s = int(s.strip())
+            h = int(h) if input.endswith('am') else int(h) + 12
+            m = int(m)
+            s = int(s)
             return TimeOfDay.from_hms(h, m, s)
         else:
             [h, m, s, *_] = input.split(':') + ['0', '0']

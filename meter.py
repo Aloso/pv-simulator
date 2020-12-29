@@ -40,6 +40,9 @@ def main():
     max_power = args.max_consumption
     seed = args.seed if args.seed is not None else randrange(sys.maxsize)
 
+    if max_power < 0:
+        raise CliError('max-consumption must be positive')
+
     if not quiet:
         print(f' [*] Connecting to `{QUEUE}` queue')
 
@@ -48,8 +51,7 @@ def main():
     channel.queue_declare(queue=QUEUE)
 
     if not quiet:
-        print(
-            f' [*] Generating values between 0 and {max_power} with seed {seed}')
+        print(f' [*] Generating values between 0 and {max_power} with seed {seed}')
 
     rng = continuous_prng(
         v_min=0,
@@ -62,10 +64,7 @@ def main():
         timestamp = time.seconds()
         value = -next(rng)
 
-        channel.basic_publish(
-            exchange='',
-            routing_key=QUEUE,
-            body=f'{timestamp}:{value}')
+        channel.basic_publish(exchange='', routing_key=QUEUE, body=f'{timestamp}:{value}')
 
     connection.close()
 
@@ -81,5 +80,14 @@ def times_of_day(seconds_step: int):
         yield t
 
 
+class CliError(Exception):
+    def __init__(self, desc: str):
+        self.description = desc
+
+
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except CliError as e:
+        print(f'error: {e.description}')
+        sys.exit(1)

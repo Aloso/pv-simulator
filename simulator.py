@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from src.time_of_day import TimeOfDay
-from src.prng import continuous_prng
+from src.pv_generation import PvGenerator, weather
 
 import argparse
 import os
@@ -9,9 +9,6 @@ from random import Random, randrange
 import sys
 
 QUEUE = 'meter'
-
-# A flag to emit a CSV file instead (for debugging purposes)
-CSV_OUTPUT = False
 
 
 def parse_args():
@@ -71,6 +68,14 @@ def main():
     sunset = TimeOfDay.parse_hms(args.sunset)
     noise_factor = args.weather_noise
     seed = args.seed if args.seed is not None else randrange(sys.maxsize)
+    csv_output = args.output.endswith('.csv')
+
+    if sunrise > sunset:
+        raise CliError("sunrise can't occur after sunset")
+    if max_power < 0:
+        raise CliError('max-power must be positive')
+    if noise_factor < 0 or noise_factor > 1:
+        raise CliError('noise-factor must be between 0 and 1')
 
     with open(args.output, 'x') as file:
         if not quiet:
@@ -80,8 +85,7 @@ def main():
             print(f' [*] Seed: {seed}')
             print(f' [*] Connecting to `{QUEUE}` queue')
 
-        connection = pika.BlockingConnection(
-            pika.ConnectionParameters('localhost'))
+        connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
         channel = connection.channel()
         channel.queue_declare(queue=QUEUE)
 
@@ -96,11 +100,10 @@ def main():
             pv_value = round(pv_gen.get_value(time) * next(weather_gen))
             sum = meter_value + pv_value
 
-            if CSV_OUTPUT:
+            if csv_output:
                 file.write(f'{time},{meter_value},{pv_value},{sum}\n')
             else:
-                file.write(
-                    f'[{time}] meter: {meter_value}    \tpv: {pv_value}   \tsum: {sum}\n')
+                file.write(f'[{time}] M:{meter_value} P:{pv_value} S:{sum}\n')
 
         channel.basic_consume(
             queue=QUEUE,
@@ -118,73 +121,9 @@ def parse_meter_message(msg: bytes) -> (TimeOfDay, int):
     return TimeOfDay(int(timestamp)), int(meter_value)
 
 
-class PvGenerator:
-    "Generates PV (photovoltaic) power values"
-
-    def __init__(self, sunrise: TimeOfDay, sunset: TimeOfDay, max_power: int):
-        self.sunrise = sunrise
-        self.sunset = sunset
-        self.max_power = max_power
-
-        self.day_len = sunset.seconds() - sunrise.seconds()
-        self.zenith_time = sunrise + self.day_len / 2
-
-        dawn_len = self.day_len / 10
-        self.dawn_start = self.sunrise - dawn_len
-        self.dusk_end = self.sunset + dawn_len
-
-        self.poly_factor = -max_power / (self.day_len / 2) ** 2
-        self.dawn_slope = max_power / (self.day_len / 2 + dawn_len) / 3
-
-    def get_value(self, time: TimeOfDay) -> int:
-        if time < self.dawn_start or time > self.dusk_end:
-            return 0
-        else:
-            t1 = self.get_polynomial_value(time)
-            t2 = self.get_dawn_or_dusk_value(time)
-            return max(t1, t2)
-
-    def get_dawn_or_dusk_value(self, time: TimeOfDay) -> int:
-        x = time.seconds()
-        if time < self.zenith_time:
-            return (x - self.dawn_start.seconds()) * self.dawn_slope
-        else:
-            return -(x - self.dusk_end.seconds()) * self.dawn_slope
-
-    def get_polynomial_value(self, time: TimeOfDay) -> int:
-        x = time.seconds()
-        z1 = self.sunrise.seconds()
-        z2 = self.sunset.seconds()
-        return self.poly_factor * (x - z1) * (x - z2)
-
-
-def weather(noise_factor: float, randomness: Random):
-    """
-    Generates random but continuous factors to account for the current weather.
-    The factors are between 0 and 1, where 1 means clear sky and 0 means really bad weather.
-
-    `noise_factor` specifies the maximum influence of weather.
-    For example, if `noise_factor` is 0.8, then all factors are between 0.2 and 1.
-    If the `noise_factor` is 0, the `weather_factor` function always returns 1.
-    """
-
-    rng1 = continuous_prng(
-        v_min=0,
-        v_max=10_000,
-        max_diff=10,
-        max_equal_values=100,
-        randomness=randomness)
-
-    rng2 = continuous_prng(
-        v_min=0,
-        v_max=10_000,
-        max_diff=10,
-        max_equal_values=100,
-        randomness=randomness)
-
-    while True:
-        weather = (next(rng1) / 10_000) * (next(rng2) / 10_000)
-        yield 1 - (weather * noise_factor)
+class CliError(Exception):
+    def __init__(self, desc: str):
+        self.description = desc
 
 
 if __name__ == '__main__':
@@ -193,5 +132,9 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print('Interrupted')
     except FileExistsError as e:
-        print('error: File %r already exists\n'
-              'delete or rename it before trying again' % e.filename)
+        print(f'error: File `{e.filename}`` already exists\n'
+              'delete or rename it before trying again')
+        sys.exit(1)
+    except CliError as e:
+        print(f'error: {e.description}')
+        sys.exit(1)
