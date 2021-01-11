@@ -34,6 +34,8 @@ The first service can be started by running `./meter.py`; it terminates automati
 
 The second service can be started by running `./simulator.py`; it must be terminated by pressing <kbd>Ctrl+C</kbd>. By default, this generates photovolataic power values up to 3.5 kW, with some added noise to account for clouds and bad weather, and writes them to the file `pv_values.txt`. Run `./simulator.py --help` to see all available options.
 
+If one of the above commands fails with a `ModuleNotFoundError`, please run `pipenv sync && pipenv shell` and try again.
+
 ## Test suite
 
 This project includes a unit test suite. To run the tests, execute
